@@ -1,0 +1,183 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Latin Modern Roman, Times New Roman, serif",
+    "primaryColor": "#eaf4fb",
+    "primaryBorderColor": "#2f5f85",
+    "primaryTextColor": "#111827",
+    "lineColor": "#334155",
+    "tertiaryColor": "#f8fafc"
+  }
+}}%%
+erDiagram
+  direction LR
+  AUTH_USER {
+    int id PK
+    str username
+    str email
+    str password
+    bool is_active
+  }
+
+  USER_PROFILE {
+    int id PK
+    int user_id FK
+    enum role
+    str phone
+  }
+
+  STUDENT {
+    int id PK
+    int user_id FK
+    str student_code UK
+    str full_name
+    enum gender
+    str email
+    str phone
+    enum status
+  }
+
+  BUILDING {
+    int id PK
+    str name
+    str address
+    enum status
+  }
+
+  FLOOR {
+    int id PK
+    int building_id FK
+    int floor_number
+  }
+
+  ROOM {
+    int id PK
+    int floor_id FK
+    str room_number
+    int capacity
+    enum gender_policy
+    enum status
+  }
+
+  BED {
+    int id PK
+    int room_id FK
+    str bed_code
+    str position
+    enum status
+  }
+
+  ASSIGNMENT {
+    int id PK
+    int student_id FK
+    int bed_id FK
+    int assigned_by_id FK
+    enum status
+    date start_date
+    date end_date
+    str reason
+  }
+
+  INSPECTION {
+    int id PK
+    int assignment_id FK
+    int inspected_by_id FK
+    enum type
+    str condition_summary
+    decimal damage_fee
+    text notes
+  }
+
+  INVOICE {
+    int id PK
+    int student_id FK
+    str invoice_number UK
+    decimal total_amount
+    date due_date
+    enum status
+  }
+
+  INVOICE_LINE {
+    int id PK
+    int invoice_id FK
+    enum item_type
+    str description
+    int quantity
+    decimal unit_price
+    decimal amount
+  }
+
+  PAYMENT {
+    int id PK
+    int invoice_id FK
+    int student_id FK
+    int reviewed_by_id FK
+    decimal amount
+    enum method
+    enum status
+    datetime submitted_at
+  }
+
+  PAYMENT_EVIDENCE {
+    int id PK
+    int payment_id FK
+    file file
+    str source
+    datetime uploaded_at
+    str checksum
+  }
+
+  ANNOUNCEMENT {
+    int id PK
+    int created_by_id FK
+    str title
+    text body
+    enum audience
+    datetime published_at
+  }
+
+  NOTIFICATION {
+    int id PK
+    int recipient_id FK
+    enum channel
+    str subject
+    text body
+    enum status
+    datetime sent_at
+  }
+
+  AUDIT_LOG {
+    int id PK
+    int actor_id FK
+    str action
+    str target_type
+    int target_id
+    json old_value
+    json new_value
+    datetime created_at
+  }
+
+  AUTH_USER ||--|| USER_PROFILE : extends
+  USER_PROFILE ||--o| STUDENT : owns_student_record
+
+  BUILDING ||--|{ FLOOR : contains
+  FLOOR ||--o{ ROOM : contains
+  ROOM ||--o{ BED : contains
+
+  STUDENT ||--o{ ASSIGNMENT : has_history
+  BED ||--o{ ASSIGNMENT : occupied_by
+  USER_PROFILE ||--o{ ASSIGNMENT : assigns
+  ASSIGNMENT ||--o{ INSPECTION : checked_by
+  USER_PROFILE ||--o{ INSPECTION : inspects
+
+  STUDENT ||--o{ INVOICE : billed_by
+  INVOICE ||--|{ INVOICE_LINE : includes
+  INVOICE ||--o{ PAYMENT : paid_by
+  STUDENT ||--o{ PAYMENT : submits
+  USER_PROFILE ||--o{ PAYMENT : reviews
+  PAYMENT ||--o{ PAYMENT_EVIDENCE : supported_by
+
+  USER_PROFILE ||--o{ ANNOUNCEMENT : creates
+  USER_PROFILE ||--o{ NOTIFICATION : receives
+  ANNOUNCEMENT ||--o{ NOTIFICATION : generates
+  USER_PROFILE ||--o{ AUDIT_LOG : performs

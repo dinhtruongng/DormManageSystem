@@ -1,0 +1,187 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Latin Modern Roman, Times New Roman, serif",
+    "primaryColor": "#eaf4fb",
+    "primaryBorderColor": "#2f5f85",
+    "primaryTextColor": "#111827",
+    "lineColor": "#334155",
+    "tertiaryColor": "#f8fafc"
+  }
+}}%%
+classDiagram
+direction TB
+
+class UserProfile {
+  -id: int
+  -user: User
+  -role: Role
+  -phone: str
+  +hasRole(role: Role) bool
+  +isStaff() bool
+}
+
+class Student {
+  -id: int
+  -studentCode: str
+  -fullName: str
+  -gender: Gender
+  -status: StudentStatus
+  +assignment() Assignment
+  +balanceDue() Decimal
+}
+
+class Building {
+  -id: int
+  -name: str
+  -address: str
+  -status: BuildingStatus
+  +occupancyRate() float
+}
+
+class Floor {
+  -id: int
+  -building: Building
+  -floorNumber: int
+  +roomCount() int
+}
+
+class Room {
+  -id: int
+  -floor: Floor
+  -roomNumber: str
+  -capacity: int
+  -policy: GenderPolicy
+  -status: RoomStatus
+  +availableBedCount() int
+  +accepts(student: Student) bool
+}
+
+class Bed {
+  -id: int
+  -room: Room
+  -bedCode: str
+  -position: str
+  -status: BedStatus
+  +reserve() void
+  +occupy() void
+  +release() void
+}
+
+class Assignment {
+  -id: int
+  -student: Student
+  -bed: Bed
+  -status: AssignmentStatus
+  -startDate: date
+  -endDate: date
+  +activate() void
+  +complete() void
+  +cancel() void
+}
+
+class Inspection {
+  -id: int
+  -assignment: Assignment
+  -type: InspectionType
+  -conditionSummary: str
+  -damageFee: Decimal
+  +damageTotal() Decimal
+  +requiresCleaning() bool
+}
+
+class Invoice {
+  -id: int
+  -student: Student
+  -invoiceNumber: str
+  -totalAmount: Decimal
+  -dueDate: date
+  -status: InvoiceStatus
+  +total() Decimal
+  +balanceDue() Decimal
+  +markOverdue() void
+}
+
+class InvoiceLine {
+  -id: int
+  -invoice: Invoice
+  -itemType: ItemType
+  -description: str
+  -quantity: int
+  -amount: Decimal
+  +amount() Decimal
+}
+
+class Payment {
+  -id: int
+  -invoice: Invoice
+  -student: Student
+  -amount: Decimal
+  -method: PaymentMethod
+  -status: PaymentStatus
+  +confirm() void
+  +reject(reason: str) void
+}
+
+class PaymentEvidence {
+  -id: int
+  -payment: Payment
+  -file: file
+  -source: str
+  -uploadedAt: datetime
+  -checksum: str
+  +validateFile() bool
+  +publicLabel() str
+}
+
+class Announcement {
+  -id: int
+  -title: str
+  -body: text
+  -audience: Audience
+  -createdBy: UserProfile
+  -publishedAt: datetime
+  +publish() void
+  +targetRecipients() list
+}
+
+class Notification {
+  -id: int
+  -recipient: UserProfile
+  -channel: Channel
+  -subject: str
+  -status: NotificationStatus
+  -sentAt: datetime
+  +markSent() void
+  +markFailed() void
+}
+
+class AuditLog {
+  -id: int
+  -actor: UserProfile
+  -action: str
+  -targetType: str
+  -targetId: int
+  -createdAt: datetime
+  +record() void
+  +summarize() str
+}
+
+UserProfile "1" -- "0..1" Student : owns account
+Building "1" *-- "1..*" Floor : contains
+Floor "1" *-- "0..*" Room : contains
+Room "1" *-- "0..*" Bed : contains
+
+Student "1" -- "0..*" Assignment : has
+Bed "1" -- "0..*" Assignment : assigned through
+Assignment "1" *-- "0..*" Inspection : records
+
+Student "1" -- "0..*" Invoice : billed by
+Invoice "1" *-- "1..*" InvoiceLine : includes
+Invoice "1" -- "0..*" Payment : paid by
+Payment "1" *-- "0..*" PaymentEvidence : supports
+
+UserProfile "1" -- "0..*" Announcement : creates
+Announcement "1" ..> "0..*" Notification : triggers
+UserProfile "1" -- "0..*" Notification : receives
+UserProfile "1" -- "0..*" AuditLog : performs
