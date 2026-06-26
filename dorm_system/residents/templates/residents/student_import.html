@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Import students &middot; Dorm Management{% endblock %}
+{% block content %}
+<a href="{% url 'residents:student_list' %}" class="text-decoration-none small">&larr; Back to students</a>
+<div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+  <div><h3 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> Import students</h3>
+  <p class="text-muted mb-0">Bulk-create applicant records from a CSV file (FR-02).</p></div>
+</div>
+<p class="text-muted small">
+  CSV header must include: <code>student_code, full_name, gender, email, phone</code>.
+  <code>gender</code> accepts <code>male</code>, <code>female</code>, or <code>other</code>.
+  Existing student codes are skipped, never overwritten.
+</p>
+<form method="post" enctype="multipart/form-data" class="card p-4">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">CSV file</label>
+    <input type="file" name="csv" class="form-control" accept=".csv,text/csv" required>
+  </div>
+  <button type="submit" class="btn btn-primary" style="background: var(--primary); border-color: var(--primary)"><i class="bi bi-upload"></i> Import</button>
+</form>
+{% endblock %}

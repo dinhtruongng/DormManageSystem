@@ -34,3 +34,34 @@ Use this file to summarize implementation validation and visual QA.
 - Replaced §8.8 payment-review placeholder wireframe with `figures/screenshots/05-payment-review.png`.
 - Added Appendix A "Implemented Screens" with login, assignment, payment-upload, and check-out screenshots.
 - Rewrote §8.1 and §8.6 framing text from "placeholder / before implementation" to "implemented".
+
+## Report↔implementation consistency pass (2026-06-27)
+
+Goal: ensure every report requirement has matching code. Findings and fixes:
+
+| Area | Report reference | Was | Now |
+|---|---|---|---|
+| Student CSV import | FR-02, §8.10, §9.2 | No CSV anywhere | `import_students` service + admin `/residents/import/` view + "Import CSV" button |
+| Student create API | §8.7 table row | No route for `POST /students` | `POST /api/v1/students/create` (Admin-only, 201/409) |
+| Room inventory service | §9.1 map, §9.4 | No `rooms/services.py`; app read-only | `create_room`, `sync_beds`, `set_bed_status` (validated transitions + audit) |
+| Recurring rent | §9.1, §9.7 | Logic inline in API handler | `generate_recurring_rent(period_label)` service; API calls it |
+| Report CSV export | FR-12, §8.10, §9.10 | No exports | `/reports/{occupancy,finance}/export/` CSV views + buttons |
+
+Smoke checks this pass (Django test client against seeded DB):
+
+| Check | Result |
+|---|---|
+| CSV import (4-row file: 2 new, 1 dup, 1 invalid) via `POST /residents/import/` | 302; 2 students created, dup + invalid skipped |
+| `POST /api/v1/students/create` (admin) | 201, record created |
+| `POST /api/v1/students/create` duplicate code | 409 conflict |
+| `POST /api/v1/students/create` as student | 403 (Admin-only enforced) |
+| `POST /api/v1/invoices/batches` | 200, "Generated 6 recurring invoice(s)" (routes through service) |
+| `GET /reports/occupancy/export/` | 200, `text/csv`, correct header row |
+| `GET /reports/finance/export/` | 200, CSV with per-invoice receivable rows |
+| Student denied `/residents/import/` | 403 |
+| `create_room` (cap 2 / cap 4) | beds provisioned: 2 / 4 |
+| `sync_beds` (4→6, 6→2) | beds added to 6; capacity updated to 2, no beds dropped |
+| `set_bed_status` available→reserved | transition applied, `AuditLog` row written |
+| `set_bed_status` reserved→cleaning (illegal) | `BedStatusError` raised |
+
+System check: 0 issues. `makemigrations --check --dry-run`: no changes (all additions are rows/views/services, no schema change). `flush` + `seed_demo`: 24 students, 40 beds, 8 assignments, 6 invoices, 2 payments.

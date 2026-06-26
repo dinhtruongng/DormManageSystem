@@ -62,3 +62,24 @@ def finance_report():
         "pending_payments": Payment.objects.filter(status=PaymentStatus.PENDING_REVIEW).count(),
         "overdue": Invoice.objects.filter(status=InvoiceStatus.OVERDUE).count(),
     }
+
+
+def finance_report_rows():
+    """Per-invoice receivable rows for the finance report and CSV export (§9.10)."""
+    rows = []
+    for invoice in Invoice.objects.exclude(status=InvoiceStatus.CANCELLED).select_related(
+        "student"
+    ):
+        balance = calculate_invoice_balance(invoice)
+        rows.append(
+            {
+                "invoice_number": invoice.invoice_number,
+                "student": invoice.student.full_name,
+                "student_code": invoice.student.student_code,
+                "status": invoice.status,
+                "total": float(balance["total"]),
+                "outstanding": float(balance["outstanding"]),
+                "due_date": invoice.due_date.isoformat(),
+            }
+        )
+    return rows

@@ -11,16 +11,31 @@ from dorm_system.communications.models import Announcement, Notification
 from dorm_system.common.models import NotificationChannel, NotificationStatus, Role
 
 
+def record_notification(recipient, channel, subject, body="", *, status=NotificationStatus.SENT, announcement=None):
+    """Persist a single notification log entry (§9.8 NotificationService).
+
+    Centralizes Notification creation so announcement/reminder/digest flows
+    share one write path and a consistent default status.
+    """
+    return Notification.objects.create(
+        recipient=recipient,
+        announcement=announcement,
+        channel=channel,
+        subject=subject,
+        body=body,
+        status=status,
+    )
+
+
 def send_announcement(announcement, recipients):
     """Fan out an announcement to a set of users and record notifications."""
     for user in recipients:
-        Notification.objects.create(
-            recipient=user,
+        record_notification(
+            user,
+            NotificationChannel.EMAIL,
+            announcement.title,
+            announcement.body,
             announcement=announcement,
-            channel=NotificationChannel.EMAIL,
-            subject=announcement.title,
-            body=announcement.body,
-            status=NotificationStatus.SENT,
         )
     announcement.published_at = timezone.now()
     announcement.save(update_fields=["published_at"])
@@ -52,10 +67,9 @@ def send_invoice_reminder(invoice):
         send_mail(subject, body, "dorm@example.edu", [invoice.student.user.email], fail_silently=True)
     except Exception:
         pass
-    return Notification.objects.create(
-        recipient=invoice.student.user,
-        channel=NotificationChannel.EMAIL,
-        subject=subject,
-        body=body,
-        status=NotificationStatus.SENT,
+    return record_notification(
+        invoice.student.user,
+        NotificationChannel.EMAIL,
+        subject,
+        body,
     )

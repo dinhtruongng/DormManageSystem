@@ -18,6 +18,7 @@ from dorm_system.communications import api as communications_api
 urlpatterns = [
     path("dashboard-summary", reports_api.dashboard_summary, name="dashboard-summary"),
     path("students", residents_api.student_list, name="students"),
+    path("students/create", residents_api.student_create, name="student-create"),
     path("students/me/invoices", billing_api.student_invoices, name="student-invoices"),
     path("rooms", rooms_api.room_list, name="rooms"),
     path("beds", rooms_api.bed_list, name="beds"),

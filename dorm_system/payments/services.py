@@ -82,12 +82,13 @@ def send_payment_review_digest():
             f"| {payment.amount:,.0f} VND | {payment.invoice.due_date}"
         )
         if finance is not None:
-            Notification.objects.create(
-                recipient=finance.user,
-                channel=NotificationChannel.EMAIL,
-                subject=f"Payment review: {payment.invoice.invoice_number}",
-                body=f"Payment {payment.id} awaits review.",
-                status=NotificationStatus.SENT,
+            from dorm_system.communications.services import record_notification
+
+            record_notification(
+                finance.user,
+                NotificationChannel.EMAIL,
+                f"Payment review: {payment.invoice.invoice_number}",
+                f"Payment {payment.id} awaits review.",
             )
         payment.review_email_sent = True
         payment.save(update_fields=["review_email_sent"])

@@ -1,29 +1,13 @@
-from dorm_system.billing.services import calculate_invoice_balance
+from dorm_system.billing.services import calculate_invoice_balance, generate_recurring_rent
 from dorm_system.common.api import api_ok
 
 
 def invoice_batch(request):
-    """Generate recurring rent invoices for active residents (stub-friendly)."""
-    from dorm_system.billing.models import Invoice
-    from dorm_system.billing.services import generate_invoice
-    from dorm_system.common.models import InvoiceItemType, StudentStatus
-    from dorm_system.residents.models import Student
-
-    created = 0
-    for s in Student.objects.filter(status=StudentStatus.ACTIVE):
-        generate_invoice(
-            s,
-            [
-                {
-                    "item_type": InvoiceItemType.RENT,
-                    "description": "Monthly dormitory rent",
-                    "unit_price": 1500000,
-                    "amount": 1500000,
-                }
-            ],
-        )
-        created += 1
-    return api_ok(f"Generated {created} recurring invoice(s).", {"created": created})
+    """Generate recurring rent invoices for active residents (§9.7, FR-08)."""
+    invoices = generate_recurring_rent()
+    return api_ok(
+        f"Generated {len(invoices)} recurring invoice(s).", {"created": len(invoices)}
+    )
 
 
 def student_invoices(request):

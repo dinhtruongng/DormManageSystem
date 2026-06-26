@@ -1,11 +1,13 @@
-"""Resident views: student list/search, profile detail, student self-portal."""
+"""Resident views: student list/search, import, profile detail, student self-portal."""
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from dorm_system.accounts.permissions import can_view_student, role_required
 from dorm_system.common.models import Role, StudentStatus
 from dorm_system.residents.models import Student
+from dorm_system.residents.services import import_students
 
 
 @role_required(Role.ADMIN, Role.FINANCE, Role.SYSADMIN)
@@ -41,6 +43,30 @@ def student_detail(request, pk):
             "history": student.assignments.all(),
         },
     )
+
+
+@role_required(Role.ADMIN, Role.SYSADMIN)
+def student_import(request):
+    """Bulk-import students from a CSV upload (FR-02, §9.2)."""
+    if request.method == "POST":
+        uploaded = request.FILES.get("csv")
+        if uploaded is None:
+            messages.error(request, "Please choose a CSV file to upload.")
+        else:
+            try:
+                result = import_students(uploaded)
+            except UnicodeDecodeError:
+                messages.error(request, "File must be UTF-8 encoded text.")
+            else:
+                messages.success(
+                    request,
+                    f"Imported {result.created} student(s); "
+                    f"{result.skipped} skipped; {len(result.errors)} issue(s).",
+                )
+                for note in result.errors[:10]:
+                    messages.warning(request, note)
+            return redirect("residents:student_list")
+    return render(request, "residents/student_import.html")
 
 
 @login_required(login_url="/auth/login/")

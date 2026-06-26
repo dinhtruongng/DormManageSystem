@@ -120,3 +120,35 @@ def mark_overdue_invoices(today=None):
         invoice.save(update_fields=["status"])
         updated.append(invoice)
     return updated
+
+
+def generate_recurring_rent(period_label=None, *, rent=1500000, due_in_days=30):
+    """Generate a monthly rent invoice for every active resident (FR-08, §9.7).
+
+    Walks the active student roster and issues one rent line per student. The
+    description carries the period so finance can distinguish recurring cycles.
+    Returns the list of created invoices (empty for an empty roster).
+    """
+    from dorm_system.common.models import StudentStatus
+    from dorm_system.residents.models import Student
+
+    description = (
+        f"Dormitory rent - {period_label}" if period_label else "Monthly dormitory rent"
+    )
+    created = []
+    for student in Student.objects.filter(status=StudentStatus.ACTIVE):
+        created.append(
+            generate_invoice(
+                student,
+                [
+                    {
+                        "item_type": InvoiceItemType.RENT,
+                        "description": description,
+                        "unit_price": rent,
+                        "amount": rent,
+                    }
+                ],
+                due_in_days=due_in_days,
+            )
+        )
+    return created
