@@ -68,10 +68,10 @@ app root (it is on the server only, not in git):
 ```bash
 cd ~/DormManageSystem
 cat > .env <<'EOF'
-DJANGO_SECRET_KEY=change-this-to-a-long-random-string
+DJANGO_SECRET_KEY="kskskskskskslakslakdkmdkwasawegf"
 DJANGO_DEBUG=false
-DJANGO_ALLOWED_HOSTS=<username>.pythonanywhere.com
-DJANGO_CSRF_TRUSTED_ORIGINS=https://<username>.pythonanywhere.com
+DJANGO_ALLOWED_HOSTS=tonyshelby.pythonanywhere.com
+DJANGO_CSRF_TRUSTED_ORIGINS=https://tonyshelby.pythonanywhere.com
 EOF
 ```
 
@@ -121,18 +121,18 @@ Replace `<username>` with your username, **Save**, and go back to the **Web** ta
 
 On the **Web** tab:
 
-1. **Virtualenv**: enter `/home/<username>/DormManageSystem/.venv` (or use the
+1. **Virtualenv**: enter `/home/tonyshelby/DormManageSystem/.venv` (or use the
    picker).
 2. **Static files** section → add a mapping:
    - **URL**: `/static/`
-   - **Directory**: `/home/<username>/DormManageSystem/staticfiles`
+   - **Directory**: `/home/tonyshelby/DormManageSystem/staticfiles`
 
 ## 9. Reload and open
 
 Click the green **Reload** button at the top of the **Web** tab, then visit:
 
 ```
-https://<username>.pythonanywhere.com
+https://tonyshelby.pythonanywhere.com
 ```
 
 You should see the login page. Demo accounts:
@@ -143,18 +143,112 @@ You should see the login page. Demo accounts:
 
 ## 10. Updating after a code change
 
-In a Bash console:
+There are two machines: **local** (where you edit) and **PythonAnywhere** (where
+it runs live). The golden rule is one-directional — always push from local,
+always pull on the server. Never edit files directly on PythonAnywhere; edit
+locally, commit, push, then pull on the server.
+
+### 10.1 — On your local machine: commit and push
+
+```bash
+cd /home/tony/class/2025.2/prj2    # or wherever your local copy lives
+git add -A
+git commit -m "describe what you changed"
+git push origin main
+```
+
+Nothing on the live site changes yet. GitHub now has the new code.
+
+### 10.2 — On PythonAnywhere: pull and apply
+
+Open a **Bash console** (Dashboard → **Consoles** → **Bash**, or reuse an open
+one). Then run the full update sequence:
 
 ```bash
 cd ~/DormManageSystem
 git pull
 source .venv/bin/activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
+pip install -r requirements.txt          # only needed if deps changed; harmless otherwise
+python manage.py migrate                 # only needed if models changed; harmless otherwise
+python manage.py collectstatic --noinput # only needed if templates/static changed; run it anyway
 ```
 
-Then **Web** tab → **Reload**.
+Why each step:
+- `git pull` — brings the new code down.
+- `pip install` — picks up any package you added to `requirements.txt`.
+- `migrate` — applies any new database migrations you generated locally. You
+  must `makemigrations` **locally** and commit the migration files; never run
+  `makemigrations` on the server.
+- `collectstatic` — rebuilds the served `staticfiles/` folder so CSS/JS changes
+  appear. WhiteNoise names files by content hash, so old hashes drop out
+  automatically.
+
+### 10.3 — Reload the web app
+
+The running web app still holds the old code in memory. Go to Dashboard →
+**Web** tab → green **Reload** button (top of the page). The site now serves the
+new code.
+
+Visit `https://tonyshelby.pythonanywhere.com` and hard-refresh
+(Ctrl+Shift+R / Cmd+Shift+R) to bust your browser's cached CSS.
+
+### 10.4 — Quick reference: what triggers what
+
+| You changed… | `git pull` | `pip install` | `migrate` | `collectstatic` | `Reload` |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Python views / templates (logic) | ✅ | — | — | ✅ | ✅ |
+| `requirements.txt` (a new package) | ✅ | ✅ | — | — | ✅ |
+| A model + added a migration file | ✅ | — | ✅ | — | ✅ |
+| CSS / JS / images in `static/` | ✅ | — | — | ✅ | ✅ |
+| Only `settings.py` / `.env` | ✅ | — | — | — | ✅ |
+
+When unsure, run **all** of them — none of these commands will break a working
+deploy. The only one to be careful with is `makemigrations`, which you do
+**locally only**.
+
+### 10.5 — Resetting the demo data
+
+The `.env` file and `db.sqlite3` are **gitignored**, so `git pull` never
+overwrites them — your live data and secrets survive updates. If you want a
+fresh dataset (e.g. after changing the seed), wipe and reseed on the server:
+
+```bash
+cd ~/DormManageSystem
+source .venv/bin/activate
+python manage.py flush --noinput      # deletes all rows, keeps the schema
+python manage.py seed_demo            # rebuilds the sample dataset
+```
+
+Then **Reload**. (Don't delete `db.sqlite3` itself — `flush` is enough and
+safer.)
+
+### 10.6 — If `git pull` errors with "local changes"
+
+This means something on the server was edited directly (often `.env`-adjacent,
+or an accidental console edit). The `.env` itself is safe (it's untracked), but
+if a tracked file was touched:
+
+```bash
+cd ~/DormManageSystem
+git stash        # set aside the server-side edits
+git pull
+git stash drop   # discard them; the local (pushed) version is the source of truth
+```
+
+Only `git stash pop` instead of `drop` if you genuinely need those server
+edits — but the correct fix is to make the change locally and push it.
+
+### 10.7 — Verify it worked
+
+```bash
+cd ~/DormManageSystem
+source .venv/bin/activate
+python manage.py check        # 0 issues = settings/imports are healthy
+```
+
+Then load the site and log in as `admin/admin`. If a page 500s, check the
+**Error log** (see Troubleshooting below) — almost always a missed `migrate` or
+a missed `Reload`.
 
 ## Troubleshooting
 
