@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}{{ student.full_name }} &middot; Dorm Management{% endblock %}
+{% block content %}
+<a href="{% url 'residents:student_list' %}" class="text-decoration-none small">&larr; Back to students</a>
+<div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+  <div>
+    <h3 class="mb-0">{{ student.full_name }}</h3>
+    <p class="text-muted mb-0"><code>{{ student.student_code }}</code> &middot; {{ student.email }} &middot; {{ student.phone }}</p>
+  </div>
+  {{ student.status|status_badge }}
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card p-3 h-100">
+      <h5>Current assignment</h5>
+      {% if assignment %}
+        <p class="mb-1"><strong>Bed:</strong> {{ assignment.bed.bed_code }} ({{ assignment.bed.room }})</p>
+        <p class="mb-1"><strong>Since:</strong> {{ assignment.start_date }}</p>
+        <p class="mb-1"><strong>Status:</strong> {{ assignment.status|status_badge }}</p>
+        {% if active_role == 'admin' and assignment.status == 'reserved' %}
+        <a href="{% url 'assignments:check_in' assignment.pk %}" class="btn btn-success btn-sm mt-2">Process check-in</a>
+        {% endif %}
+        {% if active_role == 'admin' and assignment.status == 'active' %}
+        <a href="{% url 'assignments:checkout_form' assignment.pk %}" class="btn btn-outline-primary btn-sm mt-2">Process check-out</a>
+        {% endif %}
+      {% else %}
+        <p class="text-muted">No active assignment.</p>
+        {% if active_role == 'admin' %}
+        <a href="{% url 'assignments:recommend' student.pk %}" class="btn btn-primary btn-sm" style="background: var(--primary); border-color: var(--primary)">Assign a bed</a>
+        {% endif %}
+      {% endif %}
+      <hr>
+      <p class="mb-0"><strong>Balance due:</strong> {{ student.balance_due|vnd }}</p>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card p-3 h-100">
+      <h5>Invoices</h5>
+      <table class="table table-sm align-middle">
+        <thead><tr><th>Invoice</th><th>Due</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for inv in invoices %}
+          <tr><td><a href="{% url 'billing:invoice_detail' inv.pk %}">{{ inv.invoice_number }}</a></td><td>{{ inv.due_date }}</td><td>{{ inv.total_amount|vnd }}</td><td>{{ inv.status|status_badge }}</td></tr>
+          {% empty %}<tr><td colspan="4" class="text-muted">No invoices.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card p-3 mt-3">
+  <h5>Residence history</h5>
+  <table class="table table-sm align-middle mb-0">
+    <thead><tr><th>Bed</th><th>Start</th><th>End</th><th>Status</th><th>Reason</th></tr></thead>
+    <tbody>
+      {% for a in history %}
+      <tr><td>{{ a.bed.bed_code }}</td><td>{{ a.start_date }}</td><td>{{ a.end_date|default:"-" }}</td><td>{{ a.status|status_badge }}</td><td class="small text-muted">{{ a.reason }}</td></tr>
+      {% empty %}<tr><td colspan="5" class="text-muted">No history.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

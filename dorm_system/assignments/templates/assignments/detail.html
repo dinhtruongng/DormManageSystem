@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Assignment &middot; Dorm Management{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h3 class="mb-0">Assignment #{{ assignment.pk }}</h3>
+    <p class="text-muted mb-0">{{ assignment.student.full_name }} &rarr; {{ assignment.bed.bed_code }} ({{ assignment.bed.room }})</p>
+  </div>
+  {{ assignment.status|status_badge }}
+</div>
+<div class="card p-3">
+  <dl class="row mb-0">
+    <dt class="col-sm-3">Student</dt><dd class="col-sm-9"><a href="{% url 'residents:student_detail' assignment.student.pk %}">{{ assignment.student.full_name }}</a></dd>
+    <dt class="col-sm-3">Bed</dt><dd class="col-sm-9">{{ assignment.bed.bed_code }} &middot; {{ assignment.bed.room }}</dd>
+    <dt class="col-sm-3">Period</dt><dd class="col-sm-9">{{ assignment.start_date }} &rarr; {{ assignment.end_date|default:"present" }}</dd>
+    <dt class="col-sm-3">Assigned by</dt><dd class="col-sm-9">{{ assignment.assigned_by.username|default:"system" }}</dd>
+    <dt class="col-sm-3">Reason</dt><dd class="col-sm-9">{{ assignment.reason|default:"-" }}</dd>
+  </dl>
+</div>
+<div class="mt-3 d-flex gap-2">
+  {% if assignment.status == 'reserved' %}
+  <a href="{% url 'assignments:check_in' assignment.pk %}" class="btn btn-success"><i class="bi bi-box-arrow-in-right"></i> Finalize check-in</a>
+  {% endif %}
+  {% if assignment.status == 'active' %}
+  <a href="{% url 'assignments:checkout_form' assignment.pk %}" class="btn btn-outline-primary"><i class="bi bi-box-arrow-right"></i> Process check-out</a>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+# Implementation Decisions and Report Deltas
+
+Update this file whenever implementation differs from the report or adds demo-specific details.
+
+## Decision log
+
+| Date | Area | Decision | Reason | Impact on report |
+|---|---|---|---|---|
+| 2026-06-26 | Data flow (§6 DFD) | The "D2 Evidence and Attachment Store" is implemented as Django local media storage for the demo rather than a separate store component. | One-process local demo; gateway abstracts the storage provider so S3-compatible storage can be swapped without code changes. | None — the report already lists local media for demo and S3 for deployment (§7.6). D2 remains conceptually accurate. |
+| 2026-06-26 | Database (§6.4, §7.6) | Default database is SQLite; PostgreSQL is selected automatically when `DATABASE_URL` is set. | The report mandates PostgreSQL, but the demo must run with zero external services. Postgres is one environment variable away. | Noted here; the report's PostgreSQL recommendation and constraint list remain the deployment target. |
+| 2026-06-26 | Interface (§8.7, §8.8) | The placeholder dashboard and payment-review wireframes were replaced with real screenshots from the running demo. | Report §8.6 requires placeholder replacement once the demo is built. | Source updated: captions and framing text changed from "placeholder" to "implemented screenshot." |
+| 2026-06-26 | Interface (§8.6) | Added Appendix A "Implemented Screens" with login, assignment recommendation, payment upload, and check-out screenshots. | Report §8.6 lists exactly these four screens plus dashboard and payment review for screenshot replacement. | Appendix added to `main.tex`. |
+| 2026-06-26 | Identity (§8.1) | `UserProfile.role` is a text field on a one-to-one profile model, plus a `role_required` decorator. Django auth Groups are not used to avoid double source of truth. | Keeps role ownership in one table for the demo. Functionally equivalent to the report's "role groups" intent. | None — permission behavior matches the traceability targets (FR-01, NFR-01). |

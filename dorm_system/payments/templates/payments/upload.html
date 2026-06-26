@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Upload payment &middot; Dorm Management{% endblock %}
+{% block content %}
+<a href="{% url 'residents:me' %}" class="text-decoration-none small">&larr; Back to my portal</a>
+<div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+  <div><h3 class="mb-0">Upload payment evidence</h3><p class="text-muted mb-0">Invoice {{ invoice.invoice_number }} &middot; outstanding {{ invoice.balance_due|vnd }}</p></div>
+  {{ invoice.status|status_badge }}
+</div>
+<p class="text-muted small">Accepted: JPG, PNG, PDF up to 5&nbsp;MB. Evidence is reviewed by finance; your balance does not change until a payment is confirmed.</p>
+<form method="post" enctype="multipart/form-data" class="card p-4">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Amount (VND)</label>
+    <input type="number" name="amount" class="form-control" value="{{ form.amount.value|default:'' }}" min="0" step="1000">
+    {{ form.amount.errors }}
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Evidence file(s)</label>
+    <input type="file" name="evidence" class="form-control" accept=".jpg,.jpeg,.png,.pdf" multiple required>
+    {{ form.evidence.errors }}
+  </div>
+  {{ form.non_field_errors }}
+  <button type="submit" class="btn btn-primary" style="background: var(--primary); border-color: var(--primary)"><i class="bi bi-upload"></i> Submit for review</button>
+</form>
+{% endblock %}

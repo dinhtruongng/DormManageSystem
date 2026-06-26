@@ -4,3 +4,28 @@ Project2-Dorm-Management-System.docx-1.pdf
 report.zip
 req.txt
 notes.txt
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django/demo runtime
+db.sqlite3
+media/
+staticfiles/
+.env
+.env.local
+
+# Claude/local outputs
+.claude/settings.local.json
+.claude/playwright-output/
+.claude/
+CLAUDE.md
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/

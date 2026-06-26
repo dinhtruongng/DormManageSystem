@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Check-out &middot; Dorm Management{% endblock %}
+{% block content %}
+<a href="{% url 'assignments:detail' assignment.pk %}" class="text-decoration-none small">&larr; Back to assignment</a>
+<h3 class="mt-2 mb-3"><i class="bi bi-box-arrow-right"></i> Check-out settlement</h3>
+<p class="text-muted">Record inspection, damage fees, and release the bed. Penalty invoices reduce the deposit.</p>
+<form method="post" class="card p-4">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">Condition summary</label>
+    <textarea name="condition_summary" class="form-control" rows="3" placeholder="Room handed over in good condition"></textarea>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Damage fee (VND)</label>
+      <input type="number" name="damage_fee" class="form-control" value="0" min="0" step="1000">
+    </div>
+    <div class="col-md-8 d-flex align-items-end">
+      <div class="form-check">
+        <input type="checkbox" name="needs_cleaning" class="form-check-input" id="clean">
+        <label class="form-check-label" for="clean">Bed needs cleaning / maintenance before release</label>
+      </div>
+    </div>
+  </div>
+  <div class="mb-3 mt-3">
+    <label class="form-label">Notes</label>
+    <input type="text" name="notes" class="form-control" placeholder="Optional reason">
+  </div>
+  <button type="submit" class="btn btn-primary" style="background: var(--primary); border-color: var(--primary)">Settle check-out</button>
+</form>
+{% endblock %}

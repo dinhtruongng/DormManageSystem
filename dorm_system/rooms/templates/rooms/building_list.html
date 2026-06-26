@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Rooms &middot; Dorm Management{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0"><i class="bi bi-door-open"></i> Buildings</h3>
+  <a href="{% url 'rooms:room_list' %}" class="btn btn-outline-primary btn-sm">Room detail view</a>
+</div>
+<div class="row g-3">
+  {% for b in buildings %}
+  <div class="col-md-6">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between">
+        <h5 class="mb-0">{{ b.obj.name }}</h5>
+        {{ b.obj.status|status_badge }}
+      </div>
+      <p class="text-muted small">{{ b.obj.address }}</p>
+      <div class="row text-center">
+        <div class="col"><div class="fw-bold fs-5">{{ b.total }}</div><div class="small text-muted">Beds</div></div>
+        <div class="col"><div class="fw-bold fs-5 text-primary">{{ b.occupied }}</div><div class="small text-muted">Occupied</div></div>
+        <div class="col"><div class="fw-bold fs-5 text-success">{{ b.available }}</div><div class="small text-muted">Available</div></div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col"><p class="text-muted">No buildings.</p></div>
+  {% endfor %}
+</div>
+{% endblock %}

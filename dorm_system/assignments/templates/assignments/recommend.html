@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Assign bed &middot; Dorm Management{% endblock %}
+{% block content %}
+<a href="{% url 'residents:student_detail' student.pk %}" class="text-decoration-none small">&larr; Back to {{ student.full_name }}</a>
+<div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+  <div><h3 class="mb-0">Recommended beds</h3><p class="text-muted mb-0">Ranked for {{ student.full_name }} ({{ student.get_gender_display }}) by assignment scoring</p></div>
+</div>
+
+<div class="card p-2">
+<table class="table table-hover align-middle mb-0">
+  <thead><tr><th>Score</th><th>Bed</th><th>Room</th><th>Building</th><th>Free in room</th><th>Reasons</th><th></th></tr></thead>
+  <tbody>
+    {% for c in candidates %}
+    <tr>
+      <td><span class="badge text-bg-primary fs-6">{{ c.score }}</span></td>
+      <td><code>{{ c.bed_code }}</code></td>
+      <td>{{ c.room }}</td>
+      <td>{{ c.building }}</td>
+      <td>{{ c.available_beds_in_room }}</td>
+      <td class="small text-muted">{{ c.reasons|join:", " }}</td>
+      <td><a href="{% url 'assignments:reserve' student.pk c.bed_id %}" class="btn btn-sm btn-success">Reserve</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-muted text-center py-4">No compatible available beds. Place the student on the waiting list.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

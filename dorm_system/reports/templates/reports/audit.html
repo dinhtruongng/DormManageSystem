@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Audit log &middot; Dorm Management{% endblock %}
+{% block content %}
+<h3 class="mb-3"><i class="bi bi-clock-history"></i> Audit log</h3>
+<div class="card p-2">
+<table class="table table-sm align-middle mb-0">
+  <thead><tr><th>When</th><th>Action</th><th>Target</th><th>By</th><th>Old</th><th>New</th><th>Reason</th></tr></thead>
+  <tbody>
+    {% for e in entries %}
+    <tr>
+      <td class="small">{{ e.created_at|date:"Y-m-d H:i" }}</td>
+      <td><code>{{ e.action }}</code></td>
+      <td>{{ e.target_type }}:{{ e.target_id }}</td>
+      <td>{{ e.actor.username|default:"system" }}</td>
+      <td class="small text-muted">{{ e.old_value|default:"-" }}</td>
+      <td class="small">{{ e.new_value|default:"-" }}</td>
+      <td class="small text-muted">{{ e.reason }}</td>
+    </tr>
+    {% empty %}<tr><td colspan="7" class="text-muted text-center py-3">No audit entries.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

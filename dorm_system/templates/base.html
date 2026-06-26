@@ -1,0 +1,89 @@
+{% load status_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dorm Management{% endblock %}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%8F%AB%3C/text%3E%3C/svg%3E">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root { --primary: #24577A; }
+    body { background: #f4f6f8; }
+    .navbar-brand { font-weight: 700; }
+    .navbar-dark { background: var(--primary); }
+    .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+    .stat-card .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+    .sidebar-link { color: #cfe2f3; padding: .4rem .75rem; border-radius: .375rem; display: block; text-decoration: none; }
+    .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,.15); color: #fff; }
+    .table thead th { background: #e8f1f8; color: #24577A; }
+    footer { color: #6b7280; font-size: .85rem; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark navbar-expand-lg px-3">
+  <a class="navbar-brand text-white" href="/">
+    <i class="bi bi-building"></i> Dorm Management
+  </a>
+  <span class="navbar-text text-white-50 small d-none d-md-inline">Student Dormitory Management System</span>
+  <div class="ms-auto d-flex align-items-center">
+    {% if active_profile %}
+      <span class="badge text-bg-light me-2">{{ active_profile.get_role_display }}</span>
+      <span class="text-white-50 me-3 small">{{ request.user.username }}</span>
+      <a href="{% url 'accounts:logout' %}" class="btn btn-outline-light btn-sm">Sign out</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="container-fluid">
+  <div class="row">
+    {% if active_profile %}
+    <aside class="col-lg-2 d-none d-lg-block" style="background: var(--primary); min-height: calc(100vh - 56px);">
+      <nav class="p-3 d-flex flex-column gap-1">
+        {% block sidebar %}
+          {% if active_role == 'student' %}
+            <a class="sidebar-link active" href="{% url 'residents:me' %}"><i class="bi bi-house-door"></i> My Portal</a>
+          {% else %}
+            <a class="sidebar-link" href="{% url 'reports:dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a>
+          {% endif %}
+          {% if active_role == 'admin' or active_role == 'sysadmin' %}
+            <a class="sidebar-link" href="{% url 'residents:student_list' %}"><i class="bi bi-people"></i> Students</a>
+            <a class="sidebar-link" href="{% url 'rooms:building_list' %}"><i class="bi bi-building"></i> Buildings</a>
+            <a class="sidebar-link" href="{% url 'rooms:room_list' %}"><i class="bi bi-door-open"></i> Rooms</a>
+            <a class="sidebar-link" href="{% url 'communications:list' %}"><i class="bi bi-megaphone"></i> Announcements</a>
+            <a class="sidebar-link" href="{% url 'reports:occupancy' %}"><i class="bi bi-bar-chart"></i> Occupancy</a>
+            <a class="sidebar-link" href="{% url 'reports:audit' %}"><i class="bi bi-clock-history"></i> Audit log</a>
+          {% endif %}
+          {% if active_role == 'finance' or active_role == 'admin' %}
+            <a class="sidebar-link" href="{% url 'payments:review' %}"><i class="bi bi-credit-card-2-front"></i> Payment review</a>
+            <a class="sidebar-link" href="{% url 'billing:invoice_list' %}"><i class="bi bi-receipt"></i> Invoices</a>
+            <a class="sidebar-link" href="{% url 'payments:history' %}"><i class="bi bi-list-check"></i> Payment history</a>
+            <a class="sidebar-link" href="{% url 'reports:finance' %}"><i class="bi bi-cash-stack"></i> Finance report</a>
+          {% endif %}
+        {% endblock %}
+      </nav>
+    </aside>
+    {% endif %}
+
+    <main class="{% if active_profile %}col-lg-10{% else %}col-12{% endif %} py-4 px-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|message_color }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<footer class="text-center py-3">
+  Student Dormitory Management System &middot; Demo build
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

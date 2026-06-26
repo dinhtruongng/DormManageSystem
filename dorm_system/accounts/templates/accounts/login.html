@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load status_tags %}
+{% block title %}Sign in &middot; Dorm Management{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4 mt-5">
+      <h3 class="text-center mb-1" style="color: var(--primary)"><i class="bi bi-building"></i> Dorm Management</h3>
+      <p class="text-center text-muted mb-4">Student Dormitory Management System</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control" autofocus value="{{ form.username.value|default:'' }}">
+          {{ form.username.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control">
+          {{ form.password.errors }}
+        </div>
+        {{ form.non_field_errors }}
+        <button type="submit" class="btn btn-primary w-100" style="background: var(--primary); border-color: var(--primary)">Sign in</button>
+      </form>
+      <hr class="my-4">
+      <h6 class="text-muted">Demo accounts</h6>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
+          <tbody>
+            {% for u, p, label in demo_logins %}
+            <tr><td>{{ label }}</td><td><code>{{ u }}</code></td><td><code>{{ p }}</code></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
